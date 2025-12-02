@@ -1,47 +1,35 @@
 // src/utils/emailSender.ts
-import nodemailer from 'nodemailer';
-import SMTPTransport from 'nodemailer/lib/smtp-transport'; // <--- NEW IMPORT
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Define options with the correct Type
-const transportOptions: SMTPTransport.Options = {
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  // Force IPv4 to prevent timeouts on Render
-  family: 4, 
-  // Timeouts to fail fast instead of hanging
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-};
-
-const transporter = nodemailer.createTransport(transportOptions);
+// Initialize Resend with the Key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async (to: string, subject: string, htmlContent: string) => {
   try {
-    console.log(`Attempting to send email to ${to}...`);
-    
-    const info = await transporter.sendMail({
-      from: `"LegacyVault Security" <${process.env.EMAIL_USER}>`,
-      to: to,
+    console.log(`🚀 Sending email to ${to} via Resend...`);
+
+    // NOTE: Without a custom domain, Resend only allows sending 
+    // FROM 'onboarding@resend.dev' 
+    // TO the email address you signed up with (for testing).
+    const data = await resend.emails.send({
+      from: 'LegacyVault <onboarding@resend.dev>', 
+      to: to, 
       subject: subject,
       html: htmlContent,
     });
 
-    console.log(`✅ Email sent: ${info.messageId}`);
+    if (data.error) {
+      console.error("❌ Resend API Error:", data.error);
+      return false;
+    }
+
+    console.log(`✅ Email sent successfully! ID: ${data.data?.id}`);
     return true;
   } catch (error) {
-    console.error(`❌ Failed to send email to ${to}`, error);
+    console.error("❌ Fatal Email Error:", error);
     return false;
   }
 };
