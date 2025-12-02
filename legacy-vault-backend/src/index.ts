@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { startHeartbeatService } from './jobs/heartbeat';
 import nomineeRoutes from './routes/nomineeRoutes';
+import paymentRoutes from './routes/paymentRoutes';
 
 // IMPORT ROUTES
 import userRoutes from './routes/userRoutes';
@@ -26,6 +27,7 @@ app.use(morgan('dev'));
 app.use('/api/users', userRoutes);
 app.use('/nominee', nomineeRoutes);
 app.use('/api/vault', vaultRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // HEALTH CHECK ROUTE
 // We explicitly use 'express.Request' and 'express.Response' here

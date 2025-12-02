@@ -92,12 +92,39 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const getProfile = async (req: Request, res: Response) => {
-  // We cast req to AuthRequest to access .user
-  const user = (req as AuthRequest).user;
+// src/controllers/userController.ts
+
+// ... other imports ...
+
+export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // 1. Get ID from Token
+    const userId = req.user.id;
+
+    // 2. Fetch FRESH data from Database (This gets the updated PLAN)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { 
+        id: true, 
+        email: true, 
+        plan: true, 
+        createdAt: true,
+        phone: true
+      }
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
   
-  res.json({
-    message: "This is a protected route",
-    youAre: user
-  });
+    // 3. Send fresh data
+    res.json({
+      message: "Profile fetched",
+      user: user // <--- This now has the REAL plan
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: "Server Error" });
+  }
 };
