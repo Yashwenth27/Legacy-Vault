@@ -2,7 +2,9 @@ import Navbar from "@/components/Navbar";
 import DecryptedText from "@/components/DecryptedText";
 import SpotlightCard from "@/components/SpotlightCard";
 import CrossGrid from "@/components/CrossGrid";
-import { ShieldCheck, UserX, Key, ArrowRight, HeartPulse, CheckCircle2, Lock, XCircle, HelpCircle } from "lucide-react";
+import HeroImage from "@/components/HeroImage"; // <--- NEW IMPORT
+import ProblemImage from "@/components/ProblemImage"; // <--- NEW IMPORT
+import { ShieldCheck, UserX, Key, ArrowRight, HeartPulse, CheckCircle2, Lock, XCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -11,13 +13,14 @@ export default function Home() {
       <Navbar />
 
       {/* --------------------------------------------------
-          1. HERO SECTION (High Trust, Low Friction)
+          1. HERO SECTION
          -------------------------------------------------- */}
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         <CrossGrid /> 
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-3xl opacity-50 z-0"></div>
         
         <div className="mx-auto max-w-7xl grid md:grid-cols-2 gap-12 items-center relative z-10">
+          {/* TEXT SIDE */}
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-teal-100 text-teal-700 text-xs font-bold mb-6 shadow-sm">
               <span className="relative flex h-2 w-2">
@@ -28,9 +31,9 @@ export default function Home() {
             </div>
             
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-              Secure your legacy <br/>
+              <DecryptedText text="Secure"></DecryptedText> your legacy <br/>
               <span className="text-teal-600">
-                 before it's <DecryptedText text="too late." className="text-teal-600" />
+                 before it's too late.
               </span>
             </h1>
             
@@ -49,45 +52,25 @@ export default function Home() {
             </div>
           </div>
 
+          {/* VISUAL SIDE (Hero SVG) */}
           <div className="relative hidden md:block">
-            <div className="w-full aspect-square bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-100 flex items-center justify-center relative overflow-hidden p-8 transform rotate-2 hover:rotate-0 transition duration-500">
-               <div className="absolute inset-x-0 top-0 h-32 bg-slate-50 border-b border-slate-100/50"></div>
-               <div className="relative z-10 w-full max-w-xs bg-white border border-slate-200 shadow-xl rounded-2xl p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-10 w-10 bg-teal-100 rounded-full flex items-center justify-center text-teal-600">
-                      <ShieldCheck size={20} />
-                    </div>
-                    <div>
-                      <div className="h-2 w-24 bg-slate-900/10 rounded mb-1"></div>
-                      <div className="h-2 w-16 bg-slate-900/5 rounded"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-2 w-full bg-slate-100 rounded"></div>
-                    <div className="h-2 w-full bg-slate-100 rounded"></div>
-                    <div className="h-2 w-3/4 bg-slate-100 rounded"></div>
-                  </div>
-                  <div className="mt-6 h-10 w-full bg-slate-900 rounded-lg flex items-center justify-center text-white text-xs font-bold tracking-widest">
-                    AES-256 ENCRYPTED
-                  </div>
-               </div>
-            </div>
+             <HeroImage />
           </div>
         </div>
       </section>
 
       {/* --------------------------------------------------
-          2. THE PROBLEM (Agitation)
+          2. THE PROBLEM (Problem SVG)
          -------------------------------------------------- */}
       <section className="py-24 bg-white border-y border-slate-100">
         <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-2 gap-16 items-center">
-          <div className="order-2 md:order-1 relative">
-             <div className="w-full aspect-[4/3] bg-red-50 rounded-3xl flex flex-col items-center justify-center border border-red-100">
-                <UserX size={80} className="text-red-200 mb-4" />
-                <h3 className="text-red-900 font-bold text-xl">Access Denied</h3>
-                <p className="text-red-400 text-sm">Account Locked Permanently</p>
-             </div>
+          
+          {/* VISUAL SIDE */}
+          <div className="order-2 md:order-1 relative p-8 bg-slate-50 rounded-3xl border border-slate-100">
+             <ProblemImage />
           </div>
+
+          {/* TEXT SIDE */}
           <div className="order-1 md:order-2">
             <div className="text-red-600 font-bold tracking-wider uppercase text-sm mb-2">The Silent Crisis</div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
@@ -112,7 +95,7 @@ export default function Home() {
       </section>
 
       {/* --------------------------------------------------
-          3. FEATURES GRID (Solution)
+          3. FEATURES GRID
          -------------------------------------------------- */}
       <section id="features" className="py-24 px-6 bg-slate-50 relative z-10">
         <div className="mx-auto max-w-6xl">
