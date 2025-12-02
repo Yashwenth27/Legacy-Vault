@@ -7,16 +7,20 @@ dotenv.config();
 // 1. Configure the "Transporter" (The Postman)
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,               // Use Port 465 (SSL) instead of 587
-  secure: true,            // true for 465, false for other ports
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // Add these timeouts to prevent hanging
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  // --- ADD THIS BLOCK ---
+  tls: {
+    // Do not fail on invalid certs
+    rejectUnauthorized: false,
+  },
+  // Force IPv4
+  family: 4, 
+  // ----------------------
 });
 
 // 2. The Send Function
