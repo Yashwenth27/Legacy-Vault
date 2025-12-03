@@ -34,7 +34,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
-    await sendEmail(email, "Welcome to LegacyVault", welcomeEmail(email));
+    const recoveryLink = `http://legacy-vault-mu.vercel.app/recovery`; // Use your live Vercel URL
+    
+    const htmlContent = welcomeEmail(email, recoveryLink); // Updated welcome email template
+    
+    sendEmail(email, "Welcome to LegacyVault - Your Recovery Kit", htmlContent)
+      .catch(err => console.error("Background Welcome/Recovery Email Failed:", err));
 
     // 4. Success Response (Don't send the password back!)
     res.status(201).json({
@@ -127,4 +132,8 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
   }
+};
+
+export const getRecoveryKit = async (req: AuthRequest, res: Response): Promise<void> => {
+    res.status(200).json({ message: "Recovery Kit Endpoint Placeholder" });
 };

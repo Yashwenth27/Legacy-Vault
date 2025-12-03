@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegacyVault Admin | God Mode</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- HEADER -->
+        <header class="mb-8 p-4 bg-gray-800 rounded-xl shadow-lg flex justify-between items-center">
+            <h1 class="text-3xl font-extrabold text-teal-400 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-400">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                    <path d="M2 17l10 5 10-5"></path>
+                    <path d="M2 12l10 5 10-5"></path>
+                </svg>
+                LegacyVault Admin Console
+            </h1>
+            <p class="text-xs text-gray-500">Connected to Live Database</p>
+        </header>
+
+        <!-- SEARCH & STATS -->
+        <div class="mb-6 flex flex-col md:flex-row gap-4">
+            <div class="relative flex-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-3 h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input id="searchInput" type="text" placeholder="Search users by email..." 
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                       oninput="filterUsers(this.value)">
+            </div>
+            <div class="flex gap-4 text-sm font-semibold">
+                <span id="totalUsers" class="px-4 py-3 bg-gray-800 rounded-lg border border-gray-700">Users: 0</span>
+                <span id="deadUsers" class="px-4 py-3 bg-gray-800 rounded-lg border border-gray-700 text-red-400">Deceased: 0</span>
+            </div>
+        </div>
+
+        <!-- USER TABLE -->
+        <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-x-auto shadow-xl">
+            <table class="min-w-full text-left text-sm text-gray-400">
+                <thead class="bg-gray-900 text-gray-200 font-bold uppercase">
+                    <tr>
+                        <th class="p-4">User / ID</th>
+                        <th class="p-4 text-center">Plan</th>
+                        <th class="p-4 text-center">Vaults</th>
+                        <th class="p-4 text-center">Nominees</th>
+                        <th class="p-4">Last Seen</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody" class="divide-y divide-gray-700">
+                    <!-- User rows will be injected here -->
+                    <tr>
+                        <td colspan="6" class="p-4 text-center text-lg text-teal-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="animate-spin inline mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                            Loading Users...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ERROR MESSAGE BOX -->
+        <div id="errorBox" class="mt-8 hidden p-4 rounded-lg bg-red-900/50 text-red-400 border border-red-800" role="alert">
+            <strong class="font-bold">Error:</strong>
+            <span id="errorMessage"></span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // API Configuration (Change this if your backend is running on a different port/host)
+        const API_BASE_URL = 'http://localhost:4000/api/admin/users';
+        let allUsers = [];
+
+        // --- UTILITY FUNCTIONS ---
+
+        function formatTime(isoString) {
+            if (!isoString) return 'N/A';
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        }
+
+        function showStatusToast(message, type = 'success') {
+            const color = type === 'success' ? 'bg-emerald-600' : 'bg-red-600';
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white font-semibold shadow-2xl ${color} transition-opacity duration-300`;
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        function handleError(message) {
+            document.getElementById('errorMessage').innerText = message;
+            document.getElementById('errorBox').classList.remove('hidden');
+            document.getElementById('userTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-6 text-center text-red-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="inline mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        Failed to connect to API or Database. Check console for details.
+                    </td>
+                </tr>
+            `;
+        }
+
+        // --- RENDER LOGIC ---
+
+        function renderUserRow(user) {
+            const statusClass = user.isDead ? 'bg-red-900/30 text-red-400' : 'bg-emerald-900/30 text-emerald-400';
+            const statusText = user.isDead ? 'DECEASED' : 'ALIVE';
+            const statusIcon = user.isDead ? `<svg xmlns="http://www.w3.org/2000/svg" class="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10V7a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v3"></path><path d="M12 17v4"></path><path d="M10 21h4"></path><path d="M12 17c-2 0-3 1-3 3"></path><path d="M12 17c2 0 3 1 3 3"></path></svg>` : 
+                                               `<svg xmlns="http://www.w3.org/2000/svg" class="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A9 9 0 0 0 12 5.05 9 9 0 0 0 2 1.48c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 23.5l1.6-1.6L20 15h-8l-8 7.9L12 23.5Z"></path></svg>`;
+            
+            const planClass = user.plan === 'DIAMOND' ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-700 text-gray-300';
+            
+            return `
+                <tr class="hover:bg-gray-800/50 transition">
+                    <td class="p-4">
+                        <div class="text-white font-medium">${user.email}</div>
+                        <div class="text-xs opacity-50">ID: ${user.id.substring(0, 8)}...</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-bold ${planClass}">${user.plan}</span>
+                    </td>
+                    <td class="p-4 text-center">${user.vaultCount || 0}</td>
+                    <td class="p-4 text-center">${user.nomineeCount || 0}</td>
+                    <td class="p-4 text-xs">${formatTime(user.lastHeartbeat)}</td>
+                    <td class="p-4 text-right flex justify-end gap-2">
+                        <!-- Toggle Status -->
+                        <button onclick="toggleDeadStatus('${user.id}', ${user.isDead})"
+                            class="p-2 rounded transition ${statusClass}"
+                            title="${user.isDead ? 'Mark ALIVE' : 'Trigger DEAD Protocol'}"
+                        >
+                            ${statusIcon}
+                        </button>
+                        <!-- Delete User -->
+                        <button onclick="deleteUser('${user.id}', '${user.email}')"
+                            class="p-2 hover:bg-red-900/30 rounded text-red-500 hover:text-red-400"
+                            title="Delete User"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            if (users.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6" class="p-6 text-center text-gray-500">No users found matching your search.</td></tr>
+                `;
+                return;
+            }
+
+            users.forEach(user => {
+                tbody.innerHTML += renderUserRow(user);
+            });
+            
+            // Update Stats
+            const deadCount = users.filter(u => u.isDead).length;
+            document.getElementById('totalUsers').innerText = `Users: ${allUsers.length}`;
+            document.getElementById('deadUsers').innerText = `Deceased: ${deadCount}`;
+        }
+
+        // --- API FUNCTIONS ---
+
+        async function fetchAllUsers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                allUsers = await response.json();
+                renderUsers(allUsers);
+                document.getElementById('errorBox').classList.add('hidden');
+                
+            } catch (e) {
+                console.error('Fetch Error:', e);
+                handleError(`Could not fetch data. Ensure backend is running on ${API_BASE_URL} and the Admin API endpoints are active.`);
+            }
+        }
+
+        async function toggleDeadStatus(userId, currentStatus) {
+            if (!confirm(`Confirm change status for User ID ${userId.substring(0, 8)}?`)) return;
+
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId, isDead: !currentStatus })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Failed to update user.`);
+                }
+
+                showStatusToast(`Status toggled successfully! User is now ${!currentStatus ? 'DEAD' : 'ALIVE'}.`, 'success');
+                fetchAllUsers(); // Refresh the data
+            } catch (e) {
+                console.error('Toggle Error:', e);
+                showStatusToast(`Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function deleteUser(userId, email) {
+            if (!confirm(`DANGER: Permanently delete ${email}? This action is irreversible and deletes all associated data (vaults, nominees).`)) return;
+
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Failed to delete user.`);
+                }
+
+                showStatusToast(`User ${email} deleted successfully.`, 'success');
+                fetchAllUsers(); // Refresh the data
+            } catch (e) {
+                console.error('Delete Error:', e);
+                showStatusToast(`Error: ${e.message}`, 'error');
+            }
+        }
+
+        // --- FILTERING ---
+
+        function filterUsers(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            const filtered = allUsers.filter(user => 
+                user.email.toLowerCase().includes(term) || user.id.toLowerCase().includes(term)
+            );
+            renderUsers(filtered);
+        }
+
+        // --- INITIALIZE ---
+        window.onload = fetchAllUsers;
+    </script>
+</body>
+</html>

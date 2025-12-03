@@ -39,15 +39,17 @@ export const getHtmlTemplate = (title: string, body: string, btnLink?: string, b
 };
 
 // 1. WELCOME EMAIL
-export const welcomeEmail = (name: string) => getHtmlTemplate(
-  "Welcome to the Fortress.",
-  `<p>Hello,</p>
+export const welcomeEmail = (name: string, recoveryLink: string) => getHtmlTemplate(
+  "Welcome to the Fortress. Your Recovery Kit is Ready.",
+  `<p>Hello ${name},</p>
    <p>You have successfully secured your digital legacy. Your vault is now active and encrypted with Zero-Knowledge architecture.</p>
-   <p><b>Next Steps:</b><br/>1. Add your first secret.<br/>2. Add a Nominee (Beneficiary).<br/>3. Relax.</p>`,
-  "http://localhost:3000/dashboard",
-  "Go to My Vault"
+   <p style="padding: 15px; border: 1px solid #2dd4bf; background-color: #ecfeff; border-radius: 8px;">
+     <strong>ACTION REQUIRED:</strong> Please click the link below to view and print your Master Recovery Key. 
+     This is the only physical component needed for your beneficiary to access your vault.
+   </p>`,
+  recoveryLink,
+  "View and Print Recovery Kit"
 );
-
 // 2. NOMINEE ADDED NOTIFICATION
 export const nomineeInviteEmail = (ownerEmail: string, nomineeName: string) => getHtmlTemplate(
   "You have been trusted.",
@@ -67,3 +69,11 @@ export const heartbeatWarningEmail = (daysLeft: number, resetLink: string) => ge
   resetLink,
   "I Am Alive (Reset Timer)"
 );
+
+// src/utils/emailTemplates.ts
+// ... existing STYLE and getHtmlTemplate code ...
+
+// 1. WELCOME EMAIL (Updated to include Recovery Link)
+
+
+// ... nomineeInviteEmail and heartbeatWarningEmail remain the same
